@@ -53,10 +53,27 @@ namespace Rickard.Butler
                 var type = set.PropertyType;
                 Type[] typeParameters = type.GetGenericArguments();
                 var constructedType = myType.MakeGenericType(typeParameters);
-                var obj =  Activator.CreateInstance(constructedType, set.Name.ToLower(), Client);
 
+                // Get index of ElasticIndex attribute or fall back to the property name on the ElasticContext
+                string index = GetIndex(set) ?? set.Name.ToLower();
+
+                var obj = Activator.CreateInstance(constructedType, index, Client);
                 set.SetValue(this, obj, null);
             }
+        }
+
+        private string GetIndex(PropertyInfo prop)
+        {
+            var indexAttribute = prop
+                .GetCustomAttributes(typeof(ElasticIndexAttribute), true)
+                .FirstOrDefault() as ElasticIndexAttribute;
+
+            if (indexAttribute != null)
+            {
+                return indexAttribute.Value;
+            }
+
+            return null;
         }
     }
 }

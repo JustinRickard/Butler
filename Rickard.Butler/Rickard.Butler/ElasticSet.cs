@@ -35,6 +35,16 @@ namespace Rickard.Butler.ElasticSearch
             return result.Documents.FirstOrDefault();
         }
 
+        public async Task<TDocumentType> GetByIdAsync(string id)
+        {
+            var result = await _client.SearchAsync<TDocumentType>(s => s
+                .Index(_index)
+                .Query(q => q
+                    .Ids(c => c.Values(id))));
+
+            return result.Documents.FirstOrDefault();
+        }
+
         public TDocumentType GetByIds(params string[] ids)
         {
             return GetByIdsInternal(ids);
