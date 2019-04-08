@@ -17,11 +17,9 @@ namespace Rickard.Butler.ElasticSearch
             var ctx = new ExampleContext(Options.Create(options));
 
             var doc = GetExampleDocument();
-
-            // ctx.EnsureCreated();
-            ctx.Examples.Add(doc);
-
+            ctx.Examples.AddOrUpdate(doc);
             var result = ctx.Examples.GetById(doc.Id.ToString());
+
             result.Id.Should().Be(doc.Id);
         }
 
@@ -35,7 +33,8 @@ namespace Rickard.Butler.ElasticSearch
 
         }
 
-        private class ExampleDocument
+        [ElasticsearchType(Name = "ExampleDocument", IdProperty = nameof(Id))]
+        public class ExampleDocument
         {
             public Guid Id { get; set; }
             public string Name { get; set; }

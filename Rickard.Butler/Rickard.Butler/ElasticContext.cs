@@ -45,8 +45,6 @@ namespace Rickard.Butler
 
         private void InstantiateSets(ButlerElasticOptions config)
         {
-            var propertyNameToObjectMappings = new Dictionary<string, object>();
-
             var sets = this.GetType().GetProperties(); //.Where(p => p.PropertyType == typeof(ElasticSet<>));
 
             foreach (var set in sets)
@@ -55,7 +53,7 @@ namespace Rickard.Butler
                 var type = set.PropertyType;
                 Type[] typeParameters = type.GetGenericArguments();
                 var constructedType = myType.MakeGenericType(typeParameters);
-                var obj =  Activator.CreateInstance(constructedType, set.Name, Client);
+                var obj =  Activator.CreateInstance(constructedType, set.Name.ToLower(), Client);
 
                 set.SetValue(this, obj, null);
             }

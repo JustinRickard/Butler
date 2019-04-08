@@ -9,7 +9,7 @@ using Microsoft.CSharp.RuntimeBinder;
 
 namespace Rickard.Butler.ElasticSearch
 {
-    public class ElasticSet<TDocumentType>
+    public class ElasticSet<TDocumentType> where TDocumentType : class
     {
         private readonly string _index;
         private ElasticClient _client { get; }
@@ -27,7 +27,7 @@ namespace Rickard.Butler.ElasticSearch
         #region GET
         public TDocumentType GetById(string id)
         {
-            var result = _client.Search<dynamic>(s => s
+            var result = _client.Search<TDocumentType>(s => s
                 .Index(_index)
                 .Query(q => q
                     .Ids(c => c.Values(id))));
@@ -47,7 +47,7 @@ namespace Rickard.Butler.ElasticSearch
 
         private TDocumentType GetByIdsInternal(IEnumerable<string> ids)
         {
-            var result = _client.Search<dynamic>(s => s
+            var result = _client.Search<TDocumentType>(s => s
                 .Index(_index)
                 .Query(q => q
                     .Ids(c => c.Values(ids))));
@@ -57,39 +57,30 @@ namespace Rickard.Butler.ElasticSearch
         #endregion
 
         #region Add
-        public void Add(TDocumentType document)
+        public void AddOrUpdate(TDocumentType document)
         {
-            _client.IndexDocument<dynamic>(document);
+            _client.IndexDocument(document);
         }
-        public async Task AddAsync(TDocumentType document)
+        public async Task AddOrUpdateAsync(TDocumentType document)
         {
-            await _client.IndexDocumentAsync<dynamic>(document);
+            await _client.IndexDocumentAsync(document);
         }
         #endregion
 
         #region Update
-        public void Update(TDocumentType document)
-        {
-            _client.IndexDocument<dynamic>(document);
-        }
 
-        public async Task UpdateAsync(TDocumentType document)
+        public void PartialUpdate<TPartialDocument>(string id, TPartialDocument partialDocument) where TPartialDocument : class
         {
-            await _client.IndexDocumentAsync<dynamic>(document);
-        }
-
-        public void PartialUpdate<TPartialDocument>(string id, TPartialDocument partialDocument)
-        {
-            _client.Update<dynamic, dynamic>(id, u => u
+            _client.Update<TDocumentType, TPartialDocument>(id, u => u
                 .Index(_index)
                 .Type(typeof(TDocumentType))
                 .Doc(partialDocument)
             );
         }
 
-        public async Task PartialUpdateAsync<TPartialDocument>(string id, TPartialDocument partialDocument)
+        public async Task PartialUpdateAsync<TPartialDocument>(string id, TPartialDocument partialDocument) where TPartialDocument : class
         {
-            await _client.UpdateAsync<dynamic, dynamic>(id, u => u
+            await _client.UpdateAsync<TDocumentType, TPartialDocument>(id, u => u
                 .Index(_index)
                 .Type(typeof(TDocumentType))
                 .Doc(partialDocument)
