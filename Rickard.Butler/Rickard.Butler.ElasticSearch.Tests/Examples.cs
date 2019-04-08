@@ -11,16 +11,27 @@ namespace Rickard.Butler.ElasticSearch
     public class Examples
     {
         [Fact]
-        private void ElasticContextExample()
+        public void ElasticContextExample()
         {
             var options = new ButlerElasticOptions {DefaultIndex = "examples", Uris = new[] {"http://localhost:9200"}};
             var ctx = new ExampleContext(Options.Create(options));
-
             var doc = GetExampleDocument();
-            ctx.Examples.AddOrUpdate(doc);
-            var result = ctx.Examples.GetById(doc.Id.ToString());
 
-            result.Id.Should().Be(doc.Id);
+            ctx.Examples.AddOrUpdate(doc);
+            var addResult = ctx.Examples.GetById(doc.Id.ToString());
+            addResult.Id.Should().Be(doc.Id);
+            addResult.Name.Should().Be(doc.Name);
+
+            var newName = "Example updated";
+            ctx.Examples.AddOrUpdate(new ExampleDocument {Id = doc.Id, Name = newName });
+            var updatedResult = ctx.Examples.GetById(doc.Id.ToString());
+            updatedResult.Id.Should().Be(doc.Id);
+            updatedResult.Name.Should().Be(newName);
+
+            ctx.Examples.DeleteById(doc.Id.ToString());
+
+            var resultAfterDelete = ctx.Examples.GetById(doc.Id.ToString());
+            resultAfterDelete.Should().BeNull();
         }
 
         private ExampleDocument GetExampleDocument()

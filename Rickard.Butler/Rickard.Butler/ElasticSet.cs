@@ -24,7 +24,7 @@ namespace Rickard.Butler.ElasticSearch
            _client = client;
         }
 
-        #region GET
+        #region Get
         public TDocumentType GetById(string id)
         {
             var result = _client.Search<TDocumentType>(s => s
@@ -85,6 +85,24 @@ namespace Rickard.Butler.ElasticSearch
                 .Type(typeof(TDocumentType))
                 .Doc(partialDocument)
             );
+        }
+
+        #endregion
+
+        #region DeleteById
+
+        public void DeleteById(string id)
+        {
+            _client.Delete<TDocumentType>(id, d => d
+                .Index(_index)
+                .Type(typeof(TDocumentType)));
+        }
+
+        public async Task DeleteByIdAsync(string id)
+        {
+            await _client.DeleteAsync<TDocumentType>(id, d => d
+                .Index(_index)
+                .Type(typeof(TDocumentType)));
         }
 
         #endregion
