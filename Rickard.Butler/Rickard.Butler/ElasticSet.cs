@@ -166,19 +166,29 @@ namespace Rickard.Butler.ElasticSearch
 
         public void DeleteIndex()
         {
-            var result = _client.DeleteIndex(_index);
-            if (!result.IsValid)
+            var existsResponse = _client.IndexExists(_index);
+
+            if (existsResponse.Exists)
             {
-                throw new Exception($"Failed to delete index {_index}");
+                var result = _client.DeleteIndex(_index);
+                if (!result.IsValid)
+                {
+                    throw new Exception($"Failed to delete index {_index}");
+                }
             }
         }
 
         public async Task DeleteIndexAsync()
         {
-            var result = await _client.DeleteIndexAsync(_index);
-            if (!result.IsValid)
+            var existsResponse = await _client.IndexExistsAsync(_index);
+
+            if (existsResponse.Exists)
             {
-                throw new Exception($"Failed to delete index {_index}");
+                var result = await _client.DeleteIndexAsync(_index);
+                if (!result.IsValid)
+                {
+                    throw new Exception($"Failed to delete index {_index}");
+                }
             }
         }
 
