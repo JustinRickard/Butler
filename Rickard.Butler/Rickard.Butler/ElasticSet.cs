@@ -12,15 +12,22 @@ namespace Rickard.Butler.ElasticSearch
     public class ElasticSet<TDocumentType> where TDocumentType : class
     {
         private readonly string _index;
+        private Func<IndexSettingsDescriptor, IPromise<IndexSettings>> _settings;
+        private Func<MappingsDescriptor, IPromise<IMappings>> _mapping;
         private ElasticClient _client { get; }
 
         public ElasticSet()
         {
         }
 
-        public ElasticSet(string index, ElasticClient client)
+        public ElasticSet(string index, 
+            ElasticClient client, 
+            Func<IndexSettingsDescriptor, IPromise<IndexSettings>> settings, 
+            Func<MappingsDescriptor, IPromise<IMappings>> mapping)
         {
-           _index = index;
+            _mapping = mapping;
+            _settings = settings;
+            _index = index;
            _client = client;
         }
 
@@ -99,7 +106,7 @@ namespace Rickard.Butler.ElasticSearch
 
         #endregion
 
-        #region DeleteById
+        #region Delete
 
         public void DeleteById(string id)
         {
@@ -113,6 +120,52 @@ namespace Rickard.Butler.ElasticSearch
             await _client.DeleteAsync<TDocumentType>(id, d => d
                 .Index(_index)
                 .Type(typeof(TDocumentType)));
+        }
+
+        #endregion
+
+        #region Index
+
+        public void CreateIndex()
+        {
+            var result = _client.CreateIndex(_index, c => c
+                .Settings(_settings)
+                .Mappings(_mapping));
+
+            if (!result.IsValid)
+            {
+                throw new Exception($"Failed to create index {_index} - {result.DebugInformation}");
+            }
+        }
+
+        public async Task CreateIndexAsync()
+        {
+            var result = await _client.CreateIndexAsync(_index, c => c
+                .Settings(_settings)
+                .Mappings(_mapping));
+
+            if (!result.IsValid)
+            {
+                throw new Exception($"Failed to create index {_index} - {result.DebugInformation}");
+            }
+        }
+
+        public void DeleteIndex()
+        {
+            var result = _client.DeleteIndex(_index);
+            if (!result.Acknowledged)
+            {
+                throw new Exception($"Failed to delete index {_index}");
+            }
+        }
+
+        public async Task DeleteIndexAsync()
+        {
+            var result = await _client.DeleteIndexAsync(_index);
+            if (!result.Acknowledged)
+            {
+                throw new Exception($"Failed to delete index {_index}");
+            }
         }
 
         #endregion

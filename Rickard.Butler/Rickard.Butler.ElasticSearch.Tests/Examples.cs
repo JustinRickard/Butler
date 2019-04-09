@@ -15,7 +15,7 @@ namespace Rickard.Butler.ElasticSearch
         [Fact]
         public void ElasticContextExample()
         {
-            var options = new ButlerElasticOptions {DefaultIndex = "examples", Uris = new[] {"http://localhost:9200"}};
+            var options = GetOptions();
             var ctx = new ExampleContext(Options.Create(options));
             var doc = GetExampleDocument();
 
@@ -41,7 +41,7 @@ namespace Rickard.Butler.ElasticSearch
         [Fact]
         public async Task ElasticContextExampleAsync()
         {
-            var options = new ButlerElasticOptions { DefaultIndex = "examples", Uris = new[] { "http://localhost:9200" } };
+            var options = GetOptions();
             var ctx = new ExampleContext(Options.Create(options));
             var doc = GetExampleDocument();
 
@@ -62,6 +62,17 @@ namespace Rickard.Butler.ElasticSearch
             Thread.Sleep(3000);
             var resultAfterDelete = await ctx.Examples.GetByIdAsync(doc.Id.ToString());
             resultAfterDelete.Should().BeNull();
+        }
+
+        private ButlerElasticOptions GetOptions()
+        {
+            return new ButlerElasticOptions
+            {
+                DefaultIndex = "examples",
+                Uris = new[] { "http://localhost:9200" },
+                NumberOfReplicas = 0,
+                NumberOfShards = 1
+            };
         }
 
         private ExampleDocument GetExampleDocument()

@@ -12,6 +12,8 @@ namespace Rickard.Butler
     public class ElasticContext
     {
         public ElasticClient Client;
+        protected Dictionary<string, Func<IndexSettingsDescriptor, IPromise<IIndexSettings>>> IndexToSettings;
+        protected Dictionary<string, Func<MappingsDescriptor, IPromise<IMappings>>> IndexToMapping;
 
         public ElasticContext(IOptions<ButlerElasticOptions> options)
         {
@@ -57,10 +59,34 @@ namespace Rickard.Butler
                 // Get index of ElasticIndex attribute or fall back to the property name on the ElasticContext
                 string index = GetIndex(set) ?? set.Name.ToLower();
 
-                var obj = Activator.CreateInstance(constructedType, index, Client);
+                var obj = Activator.CreateInstance(constructedType, index, Client, GetIndexSettings(index), GetIndexMappings(index));
                 set.SetValue(this, obj, null);
+
+                var createIndexMethod = constructedType.GetMethod("CreateIndex");
+                createIndexMethod.Invoke(obj, new object[]{ });
             }
         }
+
+        private Func<IndexSettingsDescriptor, IPromise<IIndexSettings>> GetIndexSettings(string index)
+        {
+            if (IndexToSettings.ContainsKey(index))
+            {
+                return IndexToSettings[index];
+            }
+
+            throw new Exception($"Could not get index settings for index {index}. Ensure this is configured in ElasticContext.");
+        }
+
+        private Func<MappingsDescriptor, IPromise<IMappings>> GetIndexMappings(string index)
+        {
+            if (IndexToMapping.ContainsKey(index))
+            {
+                return IndexToMapping[index];
+            }
+
+            throw new Exception($"Could not get index mappings for index {index}. Ensure this is configured in ElasticContext.");
+        }
+
 
         private string GetIndex(PropertyInfo prop)
         {

@@ -8,5 +8,7 @@ namespace Rickard.Butler.ElasticSearch
     {
         public string[] Uris { get; set; }
         public string DefaultIndex { get; set; }
+        public int NumberOfShards { get; set; }
+        public int NumberOfReplicas { get; set; }
     }
 }
