@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Elasticsearch.Net;
 using Microsoft.CSharp.RuntimeBinder;
 
 namespace Rickard.Butler.ElasticSearch
@@ -12,8 +13,8 @@ namespace Rickard.Butler.ElasticSearch
     public class ElasticSet<TDocumentType> where TDocumentType : class
     {
         private readonly string _index;
-        private Func<IndexSettingsDescriptor, IPromise<IndexSettings>> _settings;
-        private Func<MappingsDescriptor, IPromise<IMappings>> _mapping;
+        private readonly Func<IndexSettingsDescriptor, IPromise<IIndexSettings>> _settings;
+        private readonly Func<MappingsDescriptor, IPromise<IMappings>> _mapping;
         private ElasticClient _client { get; }
 
         public ElasticSet()
@@ -22,7 +23,7 @@ namespace Rickard.Butler.ElasticSearch
 
         public ElasticSet(string index, 
             ElasticClient client, 
-            Func<IndexSettingsDescriptor, IPromise<IndexSettings>> settings, 
+            Func<IndexSettingsDescriptor, IPromise<IIndexSettings>> settings, 
             Func<MappingsDescriptor, IPromise<IMappings>> mapping)
         {
             _mapping = mapping;
@@ -76,11 +77,11 @@ namespace Rickard.Butler.ElasticSearch
         #region Add
         public void AddOrUpdate(TDocumentType document)
         {
-            _client.IndexDocument(document);
+            _client.Index(document, s => s.Index(_index).Refresh(Refresh.True));
         }
         public async Task AddOrUpdateAsync(TDocumentType document)
         {
-            await _client.IndexDocumentAsync(document);
+            await _client.IndexAsync(document, s => s.Index(_index).Refresh(Refresh.True));
         }
         #endregion
 
@@ -92,6 +93,7 @@ namespace Rickard.Butler.ElasticSearch
                 .Index(_index)
                 .Type(typeof(TDocumentType))
                 .Doc(partialDocument)
+                .Refresh(Refresh.True)
             );
         }
 
@@ -101,6 +103,7 @@ namespace Rickard.Butler.ElasticSearch
                 .Index(_index)
                 .Type(typeof(TDocumentType))
                 .Doc(partialDocument)
+                .Refresh(Refresh.True)
             );
         }
 
@@ -112,14 +115,16 @@ namespace Rickard.Butler.ElasticSearch
         {
             _client.Delete<TDocumentType>(id, d => d
                 .Index(_index)
-                .Type(typeof(TDocumentType)));
+                .Type(typeof(TDocumentType))
+                .Refresh(Refresh.True));
         }
 
         public async Task DeleteByIdAsync(string id)
         {
             await _client.DeleteAsync<TDocumentType>(id, d => d
                 .Index(_index)
-                .Type(typeof(TDocumentType)));
+                .Type(typeof(TDocumentType))
+                .Refresh(Refresh.True));
         }
 
         #endregion
@@ -128,32 +133,41 @@ namespace Rickard.Butler.ElasticSearch
 
         public void CreateIndex()
         {
-            var result = _client.CreateIndex(_index, c => c
-                .Settings(_settings)
-                .Mappings(_mapping));
-
-            if (!result.IsValid)
+            var existsResponse = _client.IndexExists(_index);
+            if (!existsResponse.Exists)
             {
-                throw new Exception($"Failed to create index {_index} - {result.DebugInformation}");
+                var result = _client.CreateIndex(_index, c => c
+                    .Settings(_settings)
+                    .Mappings(_mapping));
+
+
+                if (!result.IsValid)
+                {
+                    throw new Exception($"Failed to create index {_index} - {result.DebugInformation}");
+                }
             }
         }
 
         public async Task CreateIndexAsync()
         {
-            var result = await _client.CreateIndexAsync(_index, c => c
-                .Settings(_settings)
-                .Mappings(_mapping));
-
-            if (!result.IsValid)
+            var existsResponse = await _client.IndexExistsAsync(_index);
+            if (!existsResponse.Exists)
             {
-                throw new Exception($"Failed to create index {_index} - {result.DebugInformation}");
+                var result = await _client.CreateIndexAsync(_index, c => c
+                    .Settings(_settings)
+                    .Mappings(_mapping));
+
+                if (!result.IsValid)
+                {
+                    throw new Exception($"Failed to create index {_index} - {result.DebugInformation}");
+                }
             }
         }
 
         public void DeleteIndex()
         {
             var result = _client.DeleteIndex(_index);
-            if (!result.Acknowledged)
+            if (!result.IsValid)
             {
                 throw new Exception($"Failed to delete index {_index}");
             }
@@ -162,7 +176,7 @@ namespace Rickard.Butler.ElasticSearch
         public async Task DeleteIndexAsync()
         {
             var result = await _client.DeleteIndexAsync(_index);
-            if (!result.Acknowledged)
+            if (!result.IsValid)
             {
                 throw new Exception($"Failed to delete index {_index}");
             }

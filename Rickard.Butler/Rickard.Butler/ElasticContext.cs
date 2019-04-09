@@ -12,13 +12,12 @@ namespace Rickard.Butler
     public class ElasticContext
     {
         public ElasticClient Client;
-        protected Dictionary<string, Func<IndexSettingsDescriptor, IPromise<IIndexSettings>>> IndexToSettings;
-        protected Dictionary<string, Func<MappingsDescriptor, IPromise<IMappings>>> IndexToMapping;
+        protected Dictionary<string, Func<IndexSettingsDescriptor, IPromise<IIndexSettings>>> IndexSettings;
+        protected Dictionary<string, Func<MappingsDescriptor, IPromise<IMappings>>> IndexMappings;
 
         public ElasticContext(IOptions<ButlerElasticOptions> options)
         {
             ConfigureClient(options.Value);
-            InstantiateSets(options.Value);
         }
 
         private void ConfigureClient(ButlerElasticOptions config)
@@ -45,7 +44,7 @@ namespace Rickard.Butler
             Client = new ElasticClient(settings);
         }
 
-        private void InstantiateSets(ButlerElasticOptions config)
+        protected void Initialize(ButlerElasticOptions config)
         {
             var sets = this.GetType().GetProperties(); //.Where(p => p.PropertyType == typeof(ElasticSet<>));
 
@@ -69,9 +68,9 @@ namespace Rickard.Butler
 
         private Func<IndexSettingsDescriptor, IPromise<IIndexSettings>> GetIndexSettings(string index)
         {
-            if (IndexToSettings.ContainsKey(index))
+            if (IndexSettings.ContainsKey(index))
             {
-                return IndexToSettings[index];
+                return IndexSettings[index];
             }
 
             throw new Exception($"Could not get index settings for index {index}. Ensure this is configured in ElasticContext.");
@@ -79,9 +78,9 @@ namespace Rickard.Butler
 
         private Func<MappingsDescriptor, IPromise<IMappings>> GetIndexMappings(string index)
         {
-            if (IndexToMapping.ContainsKey(index))
+            if (IndexMappings.ContainsKey(index))
             {
-                return IndexToMapping[index];
+                return IndexMappings[index];
             }
 
             throw new Exception($"Could not get index mappings for index {index}. Ensure this is configured in ElasticContext.");
