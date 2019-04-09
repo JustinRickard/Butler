@@ -11,6 +11,7 @@ using Xunit;
 
 namespace Rickard.Butler.ElasticSearch.Examples
 {
+    // Below tests require ElasticSearch to be running on port 9200 (default port)
     public class Examples
     {
         [Fact]
