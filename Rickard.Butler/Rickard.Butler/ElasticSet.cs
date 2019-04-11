@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Elasticsearch.Net;
@@ -73,7 +74,7 @@ namespace Rickard.Butler.ElasticSearch
             return result.Documents.FirstOrDefault();
         }
         #endregion
-
+        
         #region Add
         public void AddOrUpdate(TDocumentType document)
         {
@@ -190,6 +191,60 @@ namespace Rickard.Butler.ElasticSearch
                     throw new Exception($"Failed to delete index {_index}");
                 }
             }
+        }
+
+        #endregion
+
+        #region Search
+
+        public IEnumerable<TDocumentType> Search_StartsWith(string search, Expression<Func<TDocumentType, object>> field)
+        {
+            var result = _client.Search<TDocumentType>(s => s
+                .Index(_index)
+                .Query(q => q
+                    .MatchPhrasePrefix(m => m.Query(search).Field(field))));
+
+            return result.Documents;
+        }
+
+        public async Task<IEnumerable<TDocumentType>> Search_StartsWithAsync(string search, Expression<Func<TDocumentType, object>> field)
+        {
+            var result = await _client.SearchAsync<TDocumentType>(s => s
+                .Index(_index)
+                .Query(q => q
+                    .MatchPhrasePrefix(m => m.Query(search).Field(field))));
+
+            return result.Documents;
+        }
+
+        public IEnumerable<TDocumentType> Search_StartsWith(string search, params Expression<Func<TDocumentType, object>>[] fields)
+        {
+            var exps = new List<Func<QueryContainerDescriptor<TDocumentType>, QueryContainer>>();
+            foreach (var field in fields)
+            {
+                exps.Add(e => e.MatchPhrasePrefix(m => m.Query(search).Field(field)));
+            }
+
+            var result = _client.Search<TDocumentType>(s => s
+                .Index(_index)
+                .Query(q => q.Bool(b => b.Should(exps))));
+
+            return result.Documents;
+        }
+
+        public async Task<IEnumerable<TDocumentType>> Search_StartsWithAsync(string search, params Expression<Func<TDocumentType, object>>[] fields)
+        {
+            var exps = new List<Func<QueryContainerDescriptor<TDocumentType>, QueryContainer>>();
+            foreach (var field in fields)
+            {
+                exps.Add(e => e.MatchPhrasePrefix(m => m.Query(search).Field(field)));
+            }
+
+            var result = await _client.SearchAsync<TDocumentType>(s => s
+                .Index(_index)
+                .Query(q => q.Bool(b => b.Should(exps))));
+
+            return result.Documents;
         }
 
         #endregion
