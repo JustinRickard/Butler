@@ -38,11 +38,15 @@ namespace Rickard.Butler.ElasticSearch.Examples
 
             // Search - begins with
             ctx.Examples.AddOrUpdate(GetExampleDocument2());
-            var searchResults = ctx.Examples.Search_StartsWith("Exam", x => x.Name);
-            searchResults.Count().Should().Be(2);
+            var searchBeginsWithResults = ctx.Examples.Search_StartsWith("Exam", x => x.Name);
+            searchBeginsWithResults.Count().Should().Be(2);
 
             var searchManyResults = ctx.Examples.Search_StartsWith("desc", x => x.Name, x => x.Description);
             searchManyResults.Count().Should().Be(2);
+
+            // Search - exact
+            var searchContainsResults = ctx.Examples.Search_ExactMatch(newName, x => x.Name, x => x.Description);
+            searchContainsResults.Count().Should().Be(1);
 
             // Delete
             ctx.Examples.DeleteById(doc.Id.ToString());
@@ -81,6 +85,10 @@ namespace Rickard.Butler.ElasticSearch.Examples
 
             var searchManyResults = await ctx.Examples.Search_StartsWithAsync("desc", x => x.Name, x => x.Description);
             searchManyResults.Count().Should().Be(2);
+
+            // Search - exact
+            var searchContainsResults = await ctx.Examples.Search_ExactMatchAsync(newName, x => x.Name, x => x.Description);
+            searchContainsResults.Count().Should().Be(1);
 
             // Delete
             await ctx.Examples.DeleteByIdAsync(doc.Id.ToString());

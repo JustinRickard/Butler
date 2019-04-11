@@ -227,6 +227,36 @@ namespace Rickard.Butler.ElasticSearch
             return result.Documents;
         }
 
+        public IEnumerable<TDocumentType> Search_ExactMatch(string search, params Expression<Func<TDocumentType, object>>[] fields)
+        {
+            var exps = new List<Func<QueryContainerDescriptor<TDocumentType>, QueryContainer>>();
+            foreach (var field in fields)
+            {
+                exps.Add(e => e.MatchPhrase(m => m.Query(search).Field(field)));
+            }
+
+            var result = _client.Search<TDocumentType>(s => s
+                .Index(_index)
+                .Query(q => q.Bool(b => b.Should(exps))));
+
+            return result.Documents;
+        }
+
+        public async Task<IEnumerable<TDocumentType>> Search_ExactMatchAsync(string search, params Expression<Func<TDocumentType, object>>[] fields)
+        {
+            var exps = new List<Func<QueryContainerDescriptor<TDocumentType>, QueryContainer>>();
+            foreach (var field in fields)
+            {
+                exps.Add(e => e.MatchPhrase(m => m.Query(search).Field(field)));
+            }
+
+            var result = await _client.SearchAsync<TDocumentType>(s => s
+                .Index(_index)
+                .Query(q => q.Bool(b => b.Should(exps))));
+
+            return result.Documents;
+        }
+
         #endregion
     }
 }
