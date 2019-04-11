@@ -76,35 +76,35 @@ namespace Rickard.Butler.ElasticSearch
         #endregion
         
         #region Add
-        public void AddOrUpdate(TDocumentType document)
+        public void AddOrUpdate(TDocumentType document, bool waitForRefresh = true)
         {
-            _client.Index(document, s => s.Index(_index).Refresh(Refresh.True));
+            _client.Index(document, s => s.Index(_index).Refresh(waitForRefresh ? Refresh.True : Refresh.False));
         }
-        public async Task AddOrUpdateAsync(TDocumentType document)
+        public async Task AddOrUpdateAsync(TDocumentType document, bool waitForRefresh = true)
         {
-            await _client.IndexAsync(document, s => s.Index(_index).Refresh(Refresh.True));
+            await _client.IndexAsync(document, s => s.Index(_index).Refresh(waitForRefresh ? Refresh.True : Refresh.False));
         }
         #endregion
 
         #region Update
 
-        public void PartialUpdate<TPartialDocument>(string id, TPartialDocument partialDocument) where TPartialDocument : class
+        public void PartialUpdate<TPartialDocument>(string id, TPartialDocument partialDocument, bool waitForRefresh = true) where TPartialDocument : class
         {
             _client.Update<TDocumentType, TPartialDocument>(id, u => u
                 .Index(_index)
                 .Type(typeof(TDocumentType))
                 .Doc(partialDocument)
-                .Refresh(Refresh.True)
+                .Refresh(waitForRefresh ? Refresh.True : Refresh.False)
             );
         }
 
-        public async Task PartialUpdateAsync<TPartialDocument>(string id, TPartialDocument partialDocument) where TPartialDocument : class
+        public async Task PartialUpdateAsync<TPartialDocument>(string id, TPartialDocument partialDocument, bool waitForRefresh = true) where TPartialDocument : class
         {
             await _client.UpdateAsync<TDocumentType, TPartialDocument>(id, u => u
                 .Index(_index)
                 .Type(typeof(TDocumentType))
                 .Doc(partialDocument)
-                .Refresh(Refresh.True)
+                .Refresh(waitForRefresh ? Refresh.True : Refresh.False)
             );
         }
 
@@ -112,20 +112,20 @@ namespace Rickard.Butler.ElasticSearch
 
         #region Delete
 
-        public void DeleteById(string id)
+        public void DeleteById(string id, bool waitForRefresh = true)
         {
             _client.Delete<TDocumentType>(id, d => d
                 .Index(_index)
                 .Type(typeof(TDocumentType))
-                .Refresh(Refresh.True));
+                .Refresh(waitForRefresh ? Refresh.True : Refresh.False));
         }
 
-        public async Task DeleteByIdAsync(string id)
+        public async Task DeleteByIdAsync(string id, bool waitForRefresh = true)
         {
             await _client.DeleteAsync<TDocumentType>(id, d => d
                 .Index(_index)
                 .Type(typeof(TDocumentType))
-                .Refresh(Refresh.True));
+                .Refresh(waitForRefresh ? Refresh.True : Refresh.False));
         }
 
         #endregion
@@ -196,26 +196,6 @@ namespace Rickard.Butler.ElasticSearch
         #endregion
 
         #region Search
-
-        public IEnumerable<TDocumentType> Search_StartsWith(string search, Expression<Func<TDocumentType, object>> field)
-        {
-            var result = _client.Search<TDocumentType>(s => s
-                .Index(_index)
-                .Query(q => q
-                    .MatchPhrasePrefix(m => m.Query(search).Field(field))));
-
-            return result.Documents;
-        }
-
-        public async Task<IEnumerable<TDocumentType>> Search_StartsWithAsync(string search, Expression<Func<TDocumentType, object>> field)
-        {
-            var result = await _client.SearchAsync<TDocumentType>(s => s
-                .Index(_index)
-                .Query(q => q
-                    .MatchPhrasePrefix(m => m.Query(search).Field(field))));
-
-            return result.Documents;
-        }
 
         public IEnumerable<TDocumentType> Search_StartsWith(string search, params Expression<Func<TDocumentType, object>>[] fields)
         {
