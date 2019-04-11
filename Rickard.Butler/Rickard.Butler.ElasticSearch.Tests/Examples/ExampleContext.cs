@@ -8,6 +8,10 @@ namespace Rickard.Butler.ElasticSearch.Tests.Examples
 {
     public class ExampleContext : ElasticContext
     {
+        public const string Keyword = "keyword";
+        public const string Lowercase = "lowercase";
+        public const string KeywordLowercaseNormalizer = "keyword_lowercase";
+
         private static class Indexes
         {
             public const string Examples = "examples";
@@ -28,7 +32,10 @@ namespace Rickard.Butler.ElasticSearch.Tests.Examples
         {
             return new Dictionary<string, Func<IndexSettingsDescriptor, IPromise<IIndexSettings>>>
             {
-                {Indexes.Examples, s => s.NumberOfShards(options.NumberOfShards).NumberOfReplicas(options.NumberOfReplicas) }
+                {Indexes.Examples, s => s
+                    .Analysis(a => a.Normalizers(n =>
+                        n.Custom(KeywordLowercaseNormalizer, cs => cs.Filters(Lowercase))))
+                    .NumberOfShards(options.NumberOfShards).NumberOfReplicas(options.NumberOfReplicas) }
             };
         }
 
@@ -36,7 +43,19 @@ namespace Rickard.Butler.ElasticSearch.Tests.Examples
         {
             return new Dictionary<string, Func<MappingsDescriptor, IPromise<IMappings>>>
             {
-                {Indexes.Examples, m => m.Map<ExampleDocument>(mc => mc.AutoMap())}
+                {Indexes.Examples, m => m.Map<ExampleDocument>(mc => mc.AutoMap()
+                    .Properties(p => p.Text(
+                        t => t
+                            .Name(n => n.Name)
+                            .Fields(f => f
+                                .Keyword(k => k
+                                    .Name(Keyword)
+                                    .IgnoreAbove(256))
+                                .Keyword(k => k
+                                    .Name(Lowercase)
+                                    .IgnoreAbove(256)
+                                    .Normalizer(KeywordLowercaseNormalizer))
+                            ))))}
             };
         }
     }

@@ -197,7 +197,7 @@ namespace Rickard.Butler.ElasticSearch
 
         #region Search
 
-        public IEnumerable<TDocumentType> Search_StartsWith(string search, params Expression<Func<TDocumentType, object>>[] fields)
+        public IEnumerable<TDocumentType> Search_StartsWith(string search, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, params Expression<Func<TDocumentType, object>>[] fields)
         {
             var exps = new List<Func<QueryContainerDescriptor<TDocumentType>, QueryContainer>>();
             foreach (var field in fields)
@@ -206,13 +206,14 @@ namespace Rickard.Butler.ElasticSearch
             }
 
             var result = _client.Search<TDocumentType>(s => s
+                .Sort(sortFieldExpr)
                 .Index(_index)
                 .Query(q => q.Bool(b => b.Should(exps))));
 
             return result.Documents;
         }
 
-        public async Task<IEnumerable<TDocumentType>> Search_StartsWithAsync(string search, params Expression<Func<TDocumentType, object>>[] fields)
+        public async Task<IEnumerable<TDocumentType>> Search_StartsWithAsync(string search, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, params Expression<Func<TDocumentType, object>>[] fields)
         {
             var exps = new List<Func<QueryContainerDescriptor<TDocumentType>, QueryContainer>>();
             foreach (var field in fields)
@@ -221,6 +222,7 @@ namespace Rickard.Butler.ElasticSearch
             }
 
             var result = await _client.SearchAsync<TDocumentType>(s => s
+                .Sort(sortFieldExpr)
                 .Index(_index)
                 .Query(q => q.Bool(b => b.Should(exps))));
 
