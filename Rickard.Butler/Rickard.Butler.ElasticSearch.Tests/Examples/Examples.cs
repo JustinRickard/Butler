@@ -58,8 +58,16 @@ namespace Rickard.Butler.ElasticSearch.Examples
             searchManyResults.Count().Should().Be(2);
 
             // Search - exact
-            var searchContainsResults = ctx.Examples.Search_ExactMatch(newName, Skip, Take, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name, x => x.Description);
-            searchContainsResults.Count().Should().Be(1);
+            var searchExactResults = ctx.Examples.Search("Desc", Skip, Take, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Description);
+            searchExactResults.Count().Should().Be(1);
+
+            // Search - contains
+            var searchContainsResults = ctx.Examples.Search("xamp", Skip, Take, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name, x => x.Description);
+            searchContainsResults.Count().Should().Be(2);
+            var searchContainsResults2 = ctx.Examples.Search("esc", Skip, Take, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name, x => x.Description);
+            searchContainsResults2.Count().Should().Be(0); // Description is not using Ngram analyzer so can't search for contained text
+            var searchWildcardResults = ctx.Examples.SearchWildcard("*esc*", Skip, Take, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Description);
+            searchWildcardResults.Count().Should().Be(2);
 
             // Delete
             ctx.Examples.DeleteById(doc.Id.ToString());
@@ -116,8 +124,16 @@ namespace Rickard.Butler.ElasticSearch.Examples
                 searchManyResults.Count().Should().Be(2);
 
                 // Search - exact
-                var searchContainsResults = await ctx.Examples.Search_ExactMatchAsync(newName, Skip, Take, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name, x => x.Description);
-                searchContainsResults.Count().Should().Be(1);
+                var searchExactResults = await ctx.Examples.SearchAsync("Desc", Skip, Take, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Description);
+                searchExactResults.Count().Should().Be(1);
+
+                // Search - contains
+                var searchContainsResults = await ctx.Examples.SearchAsync("xamp", Skip, Take, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name, x => x.Description);
+                searchContainsResults.Count().Should().Be(2);
+                var searchContainsResults2 = await ctx.Examples.SearchAsync("esc", Skip, Take, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name, x => x.Description);
+                searchContainsResults2.Count().Should().Be(0); // Description is not using Ngram analyzer so can't search for contained text
+                var searchWildcardResults = await ctx.Examples.SearchWildcardAsync("*esc*", Skip, Take, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Description);
+                searchWildcardResults.Count().Should().Be(2);
 
                 // Delete
                 await ctx.Examples.DeleteByIdAsync(doc.Id.ToString());
