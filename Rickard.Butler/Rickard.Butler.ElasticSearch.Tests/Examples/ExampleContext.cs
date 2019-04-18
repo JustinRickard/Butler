@@ -13,7 +13,7 @@ namespace Rickard.Butler.ElasticSearch.Tests.Examples
         public const string KeywordLowercaseNormalizer = "keyword_lowercase";
         public const string NgramAnalyzer = "ngram_analyzer";
 
-        private static class Indexes
+        public static class Indexes
         {
             public const string Examples = "examples";
         }

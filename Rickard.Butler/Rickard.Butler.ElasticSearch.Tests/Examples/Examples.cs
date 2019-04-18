@@ -27,6 +27,9 @@ namespace Rickard.Butler.ElasticSearch.Examples
             var doc = GetExampleDocument();
             try
             {
+                ctx.Examples.Index.Should().Be(ExampleContext.Indexes.Examples);
+                ctx.Examples.DocumentType.Should().Be(typeof(ExampleDocument));
+
                 // Insert
                 ctx.Examples.AddOrUpdate(doc);
             var addResult = ctx.Examples.GetById(doc.Id.ToString());
@@ -94,6 +97,9 @@ namespace Rickard.Butler.ElasticSearch.Examples
 
             try
             {
+                ctx.Examples.Index.Should().Be(ExampleContext.Indexes.Examples);
+                ctx.Examples.DocumentType.Should().Be(typeof(ExampleDocument));
+
                 // Insert
                 await ctx.Examples.AddOrUpdateAsync(doc);
                 var addResult = await ctx.Examples.GetByIdAsync(doc.Id.ToString());
