@@ -247,6 +247,28 @@ namespace Rickard.Butler.ElasticSearch
             return result.ToSearchResult();
         }
 
+        public SearchResult<TDocumentType> Search(int skip, int take, Func<QueryContainerDescriptor<TDocumentType>, QueryContainer> searchExpression)
+        {
+            var result = _client.Search<TDocumentType>(s => s
+                .Size(take)
+                .Skip(skip)
+                .Index(Index)
+                .Query(searchExpression));
+
+            return result.ToSearchResult();
+        }
+
+        public async Task<SearchResult<TDocumentType>> SearchAsync(int skip, int take, Func<QueryContainerDescriptor<TDocumentType>, QueryContainer> query)
+        {
+            var result = await _client.SearchAsync<TDocumentType>(s => s
+                .Size(take)
+                .Skip(skip)
+                .Index(Index)
+                .Query(query));
+
+            return result.ToSearchResult();
+        }
+
         public SearchResult<TDocumentType> Search(string search, int skip, int take, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, params Expression<Func<TDocumentType, object>>[] fields)
         {
             var exps = new List<Func<QueryContainerDescriptor<TDocumentType>, QueryContainer>>();
