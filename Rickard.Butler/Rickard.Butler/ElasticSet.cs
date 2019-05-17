@@ -1,13 +1,10 @@
 ﻿using Nest;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 using Elasticsearch.Net;
-using Microsoft.CSharp.RuntimeBinder;
 
 namespace Rickard.Butler.ElasticSearch
 {
@@ -37,63 +34,164 @@ namespace Rickard.Butler.ElasticSearch
         }
 
         #region Get
+
         public TDocumentType GetById(string id)
+        {
+            return GetByIdGeneric(c => c.Values(id));
+        }
+
+        public TDocumentType GetById(Guid id)
+        {
+            return GetByIdGeneric(c => c.Values(id));
+        }
+
+        public TDocumentType GetById(int id)
+        {
+            return GetByIdGeneric(c => c.Values(id));
+        }
+
+        public TDocumentType GetById(long id)
+        {
+            return GetByIdGeneric(c => c.Values(id));
+        }
+
+        private TDocumentType GetByIdGeneric(Func<IdsQueryDescriptor, IIdsQuery> idQuery)
         {
             var result = _client.Search<TDocumentType>(s => s
                 .Index(Index)
                 .Query(q => q
-                    .Ids(c => c.Values(id))));
+                    .Ids(idQuery)));
 
             return result.Documents.FirstOrDefault();
         }
 
         public async Task<TDocumentType> GetByIdAsync(string id)
         {
+            return await GetByIdGenericAsync(c => c.Values(id));
+        }
+
+        public async Task<TDocumentType> GetByIdAsync(Guid id)
+        {
+            return await GetByIdGenericAsync(c => c.Values(id));
+        }
+
+        public async Task<TDocumentType> GetByIdAsync(int id)
+        {
+            return await GetByIdGenericAsync(c => c.Values(id));
+        }
+
+        public async Task<TDocumentType> GetByIdAsync(long id)
+        {
+            return await GetByIdGenericAsync(c => c.Values(id));
+        }
+
+        private async Task<TDocumentType> GetByIdGenericAsync(Func<IdsQueryDescriptor, IIdsQuery> idQuery)
+        {
             var result = await _client.SearchAsync<TDocumentType>(s => s
                 .Index(Index)
                 .Query(q => q
-                    .Ids(c => c.Values(id))));
+                    .Ids(idQuery)));
 
-            return result.Documents.FirstOrDefault();
-        }
+            return result.Documents.FirstOrDefault();}
 
-        public TDocumentType GetByIds(params string[] ids)
+
+        public IEnumerable<TDocumentType> GetByIds(params string[] ids)
         {
-            return GetByIdsInternal(ids);
+            return GetByIdsGeneric(id => id.Values(ids));
         }
 
-        public TDocumentType GetByIds(IEnumerable<string> ids)
+        public IEnumerable<TDocumentType> GetByIds(IEnumerable<string> ids)
         {
-            return GetByIdsInternal(ids);
+            return GetByIdsGeneric(id => id.Values(ids));
         }
 
-        private TDocumentType GetByIdsInternal(IEnumerable<string> ids)
+        public IEnumerable<TDocumentType> GetByIds(params Guid[] ids)
+        {
+            return GetByIdsGeneric(id => id.Values(ids));
+        }
+
+        public IEnumerable<TDocumentType> GetByIds(IEnumerable<Guid> ids)
+        {
+            return GetByIdsGeneric(id => id.Values(ids));
+        }
+
+        public IEnumerable<TDocumentType> GetByIds(params long[] ids)
+        {
+            return GetByIdsGeneric(id => id.Values(ids));
+        }
+
+        public IEnumerable<TDocumentType> GetByIds(IEnumerable<long> ids)
+        {
+            return GetByIdsGeneric(id => id.Values(ids));
+        }
+
+        private IEnumerable<TDocumentType> GetByIdsGeneric(Func<IdsQueryDescriptor, IIdsQuery> idQuery)
         {
             var result = _client.Search<TDocumentType>(s => s
                 .Index(Index)
                 .Query(q => q
-                    .Ids(c => c.Values(ids))));
+                    .Ids(idQuery)));
 
-            return result.Documents.FirstOrDefault();
+            return result.Documents;
         }
+
+        public async Task<IEnumerable<TDocumentType>> GetByIdsAsync(params string[] ids)
+        {
+            return await GetByIdsGenericAsync(id => id.Values(ids));
+        }
+
+        public async Task<IEnumerable<TDocumentType>> GetByIdsAsync(IEnumerable<string> ids)
+        {
+            return await GetByIdsGenericAsync(id => id.Values(ids));
+        }
+        public async Task<IEnumerable<TDocumentType>> GetByIdsAsync(params Guid[] ids)
+        {
+            return await GetByIdsGenericAsync(id => id.Values(ids));
+        }
+
+        public async Task<IEnumerable<TDocumentType>> GetByIdsAsync(IEnumerable<Guid> ids)
+        {
+            return await GetByIdsGenericAsync(id => id.Values(ids));
+        }
+
+        public async Task<IEnumerable<TDocumentType>> GetByIdsAsync(params long[] ids)
+        {
+            return await GetByIdsGenericAsync(id => id.Values(ids));
+        }
+
+        public async Task<IEnumerable<TDocumentType>> GetByIdsAsync(IEnumerable<long> ids)
+        {
+            return await GetByIdsGenericAsync(id => id.Values(ids));
+        }
+
+        private async Task<IEnumerable<TDocumentType>> GetByIdsGenericAsync(Func<IdsQueryDescriptor, IIdsQuery> idQuery)
+        {
+            var result = await _client.SearchAsync<TDocumentType>(s => s
+                .Index(Index)
+                .Query(q => q
+                    .Ids(idQuery)));
+
+            return result.Documents;
+        }
+
         #endregion
-        
+
         #region Add
-        public void AddOrUpdate(TDocumentType document, bool waitForRefresh = true)
+        public void AddOrUpdate(TDocumentType document, Refresh refresh = Refresh.False)
         {
-            _client.Index(document, s => s.Index(Index).Refresh(waitForRefresh ? Refresh.True : Refresh.False));
+            _client.Index(document, s => s.Index(Index).Refresh(refresh));
         }
-        public async Task AddOrUpdateAsync(TDocumentType document, bool waitForRefresh = true)
+        public async Task AddOrUpdateAsync(TDocumentType document, Refresh refresh = Refresh.False)
         {
-            await _client.IndexAsync(document, s => s.Index(Index).Refresh(waitForRefresh ? Refresh.True : Refresh.False));
+            await _client.IndexAsync(document, s => s.Index(Index).Refresh(refresh));
         }
 
-        public void AddOrUpdateMany(IEnumerable<TDocumentType> documents, bool waitForRefresh = true)
+        public void AddOrUpdateMany(IEnumerable<TDocumentType> documents, Refresh refresh = Refresh.False)
         {
  
             _client.IndexMany(documents, Index, typeof(TDocumentType));
         }
-        public async Task AddOrUpdateManyAsync(IEnumerable<TDocumentType> documents, bool waitForRefresh = true)
+        public async Task AddOrUpdateManyAsync(IEnumerable<TDocumentType> documents, Refresh refresh = Refresh.False)
         {
             await _client.IndexManyAsync(documents, Index, typeof(TDocumentType));
         }
@@ -102,23 +200,21 @@ namespace Rickard.Butler.ElasticSearch
 
         #region Update
 
-        public void PartialUpdate<TPartialDocument>(string id, TPartialDocument partialDocument, bool waitForRefresh = true) where TPartialDocument : class
+        public void PartialUpdate<TPartialDocument>(string id, TPartialDocument partialDocument, Refresh refresh = Refresh.False) where TPartialDocument : class
         {
             _client.Update<TDocumentType, TPartialDocument>(id, u => u
                 .Index(Index)
-                .Type(typeof(TDocumentType))
                 .Doc(partialDocument)
-                .Refresh(waitForRefresh ? Refresh.True : Refresh.False)
+                .Refresh(refresh)
             );
         }
 
-        public async Task PartialUpdateAsync<TPartialDocument>(string id, TPartialDocument partialDocument, bool waitForRefresh = true) where TPartialDocument : class
+        public async Task PartialUpdateAsync<TPartialDocument>(string id, TPartialDocument partialDocument, Refresh refresh = Refresh.False) where TPartialDocument : class
         {
             await _client.UpdateAsync<TDocumentType, TPartialDocument>(id, u => u
                 .Index(Index)
-                .Type(typeof(TDocumentType))
                 .Doc(partialDocument)
-                .Refresh(waitForRefresh ? Refresh.True : Refresh.False)
+                .Refresh(refresh)
             );
         }
 
@@ -126,20 +222,60 @@ namespace Rickard.Butler.ElasticSearch
 
         #region Delete
 
-        public void DeleteById(string id, bool waitForRefresh = true)
+        public void DeleteById(string id, Refresh refresh = Refresh.False)
         {
             _client.Delete<TDocumentType>(id, d => d
                 .Index(Index)
-                .Type(typeof(TDocumentType))
-                .Refresh(waitForRefresh ? Refresh.True : Refresh.False));
+                .Refresh(refresh));
         }
 
-        public async Task DeleteByIdAsync(string id, bool waitForRefresh = true)
+        public void DeleteById(Guid id, Refresh refresh = Refresh.False)
+        {
+            _client.Delete<TDocumentType>(id, d => d
+                .Index(Index)
+                .Refresh(refresh));
+        }
+
+        public void DeleteById(int id, Refresh refresh = Refresh.False)
+        {
+            _client.Delete<TDocumentType>(id, d => d
+                .Index(Index)
+                .Refresh(refresh));
+        }
+
+        public void DeleteById(long id, Refresh refresh = Refresh.False)
+        {
+            _client.Delete<TDocumentType>(id, d => d
+                .Index(Index)
+                .Refresh(refresh));
+        }
+
+        public async Task DeleteByIdAsync(string id, Refresh refresh = Refresh.False)
         {
             await _client.DeleteAsync<TDocumentType>(id, d => d
                 .Index(Index)
-                .Type(typeof(TDocumentType))
-                .Refresh(waitForRefresh ? Refresh.True : Refresh.False));
+                .Refresh(refresh));
+        }
+
+        public async Task DeleteByIdAsync(Guid id, Refresh refresh = Refresh.False)
+        {
+            await _client.DeleteAsync<TDocumentType>(id, d => d
+                .Index(Index)
+                .Refresh(refresh));
+        }
+
+        public async Task DeleteByIdAsync(int id, Refresh refresh = Refresh.False)
+        {
+            await _client.DeleteAsync<TDocumentType>(id, d => d
+                .Index(Index)
+                .Refresh(refresh));
+        }
+
+        public async Task DeleteByIdAsync(long id, Refresh refresh = Refresh.False)
+        {
+            await _client.DeleteAsync<TDocumentType>(id, d => d
+                .Index(Index)
+                .Refresh(refresh));
         }
 
         #endregion
@@ -156,7 +292,7 @@ namespace Rickard.Butler.ElasticSearch
                     .Mappings(_mapping));
 
 
-                if (!result.IsValid)
+                if (!result.IsValid && result.ServerError.Error.Type != "resource_already_exists_exception")
                 {
                     throw new Exception($"Failed to create index {Index} - {result.DebugInformation}");
                 }
