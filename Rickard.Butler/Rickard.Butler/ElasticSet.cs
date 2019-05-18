@@ -308,7 +308,7 @@ namespace Rickard.Butler.ElasticSearch
                     .Settings(_settings)
                     .Mappings(_mapping));
 
-                if (!result.IsValid)
+                if (!result.IsValid && result.ServerError.Error.Type != "resource_already_exists_exception")
                 {
                     throw new Exception($"Failed to create index {Index} - {result.DebugInformation}");
                 }

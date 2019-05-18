@@ -10,5 +10,7 @@ namespace Rickard.Butler.ElasticSearch
         public string DefaultIndex { get; set; }
         public int NumberOfShards { get; set; }
         public int NumberOfReplicas { get; set; }
+        public string IndexPrefix { get; set; }
+        public string IndexSuffix { get; set; }
     }
 }

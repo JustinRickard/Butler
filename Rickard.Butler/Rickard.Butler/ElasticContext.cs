@@ -14,9 +14,11 @@ namespace Rickard.Butler
         public ElasticClient Client;
         protected Dictionary<string, Func<IndexSettingsDescriptor, IPromise<IIndexSettings>>> IndexSettings;
         protected Dictionary<string, Func<MappingsDescriptor, IPromise<IMappings>>> IndexMappings;
+        protected ButlerElasticOptions ElasticOptions { get; set; }
 
         public ElasticContext(IOptions<ButlerElasticOptions> options)
         {
+            ElasticOptions = options.Value;
             ConfigureClient(options.Value);
         }
 
@@ -56,9 +58,9 @@ namespace Rickard.Butler
                 var constructedType = myType.MakeGenericType(typeParameters);
 
                 // Get index of ElasticIndex attribute or fall back to the property name on the ElasticContext
-                string index = GetIndex(set) ?? set.Name.ToLower();
+                string rawIndex = GetRawIndex(set);
 
-                var obj = Activator.CreateInstance(constructedType, index, Client, GetIndexSettings(index), GetIndexMappings(index));
+                var obj = Activator.CreateInstance(constructedType, GetIndexWithPrefixAndSuffix(rawIndex), Client, GetIndexSettings(rawIndex), GetIndexMappings(rawIndex));
                 set.SetValue(this, obj, null);
 
                 var createIndexMethod = constructedType.GetMethod("CreateIndex");
@@ -66,8 +68,11 @@ namespace Rickard.Butler
             }
         }
 
-        private Func<IndexSettingsDescriptor, IPromise<IIndexSettings>> GetIndexSettings(string index)
+        private Func<IndexSettingsDescriptor, IPromise<IIndexSettings>> GetIndexSettings(string rawIndex)
         {
+            //var index = GetIndexWithPrefixAndSuffix(rawIndex);
+            var index = rawIndex;
+
             if (IndexSettings.ContainsKey(index))
             {
                 return IndexSettings[index];
@@ -87,7 +92,7 @@ namespace Rickard.Butler
         }
 
 
-        private string GetIndex(PropertyInfo prop)
+        private string GetRawIndex(PropertyInfo prop)
         {
             var indexAttribute = prop
                 .GetCustomAttributes(typeof(ElasticIndexAttribute), true)
@@ -98,7 +103,14 @@ namespace Rickard.Butler
                 return indexAttribute.Value;
             }
 
-            return null;
+            return  prop.Name.ToLower();
+        }
+
+        public string GetIndexWithPrefixAndSuffix(string rawIndexName)
+        {
+            return (ElasticOptions.IndexPrefix ?? string.Empty) +
+                   rawIndexName +
+                   (ElasticOptions.IndexSuffix ?? string.Empty);
         }
     }
 }

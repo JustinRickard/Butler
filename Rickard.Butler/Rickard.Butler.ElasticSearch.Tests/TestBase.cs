@@ -43,7 +43,9 @@ namespace Rickard.Butler.ElasticSearch.Tests
                 DefaultIndex = "default",
                 Uris = new[] { "http://localhost:9200" },
                 NumberOfReplicas = 0,
-                NumberOfShards = 1
+                NumberOfShards = 1,
+                IndexPrefix = "local-",
+                IndexSuffix = "-tests"
             };
         }
 
