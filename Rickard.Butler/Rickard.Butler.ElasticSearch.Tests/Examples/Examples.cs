@@ -86,7 +86,7 @@ namespace Rickard.Butler.ElasticSearch.Examples
                 // Delete index
                 ctx.Examples.DeleteIndex();
             }
-            catch(Exception ex)
+            catch
             {
                 ctx.Examples.DeleteIndex();
                 throw;
@@ -161,7 +161,7 @@ namespace Rickard.Butler.ElasticSearch.Examples
                 // Delete index
                 await ctx.Examples.DeleteIndexAsync();
             }
-            catch (Exception ex)
+            catch
             {
                 await ctx.Examples.DeleteIndexAsync();
                 throw;

@@ -107,12 +107,14 @@ namespace Rickard.Butler.ElasticSearch
 
         public IEnumerable<TDocumentType> GetByIds(params Guid[] ids)
         {
-            return GetByIdsGeneric(id => id.Values(ids));
+            string[] idsStr = ids.Select(x => x.ToString()).ToArray();
+            return GetByIdsGeneric(id => id.Values(idsStr));
         }
 
         public IEnumerable<TDocumentType> GetByIds(IEnumerable<Guid> ids)
         {
-            return GetByIdsGeneric(id => id.Values(ids));
+            string[] idsStr = ids.Select(x => x.ToString()).ToArray();
+            return GetByIdsGeneric(id => id.Values(idsStr));
         }
 
         public IEnumerable<TDocumentType> GetByIds(params long[] ids)
@@ -146,12 +148,14 @@ namespace Rickard.Butler.ElasticSearch
         }
         public async Task<IEnumerable<TDocumentType>> GetByIdsAsync(params Guid[] ids)
         {
-            return await GetByIdsGenericAsync(id => id.Values(ids));
+            string[] idsStr = ids.Select(x => x.ToString()).ToArray();
+            return await GetByIdsGenericAsync(id => id.Values(idsStr));
         }
 
         public async Task<IEnumerable<TDocumentType>> GetByIdsAsync(IEnumerable<Guid> ids)
         {
-            return await GetByIdsGenericAsync(id => id.Values(ids));
+            string[] idsStr = ids.Select(x => x.ToString()).ToArray();
+            return await GetByIdsGenericAsync(id => id.Values(idsStr));
         }
 
         public async Task<IEnumerable<TDocumentType>> GetByIdsAsync(params long[] ids)
@@ -186,14 +190,15 @@ namespace Rickard.Butler.ElasticSearch
             await _client.IndexAsync(document, s => s.Index(Index).Refresh(refresh));
         }
 
-        public void AddOrUpdateMany(IEnumerable<TDocumentType> documents, Refresh refresh = Refresh.False)
+        public IBulkResponse AddOrUpdateMany(IEnumerable<TDocumentType> documents, Refresh refresh = Refresh.False)
         {
- 
-            _client.IndexMany(documents, Index, typeof(TDocumentType));
+            var result = _client.Bulk(b => b.Index(Index).IndexMany(documents).Refresh(refresh));
+            return result;
         }
-        public async Task AddOrUpdateManyAsync(IEnumerable<TDocumentType> documents, Refresh refresh = Refresh.False)
+        public async Task<IBulkResponse> AddOrUpdateManyAsync(IEnumerable<TDocumentType> documents, Refresh refresh = Refresh.False)
         {
-            await _client.IndexManyAsync(documents, Index, typeof(TDocumentType));
+            var result = _client.Bulk(b => b.Index(Index).IndexMany(documents).Refresh(refresh));
+            return result;
         }
 
         #endregion
