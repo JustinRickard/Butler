@@ -12,5 +12,7 @@ namespace Rickard.Butler.ElasticSearch
         public int NumberOfReplicas { get; set; }
         public string IndexPrefix { get; set; }
         public string IndexSuffix { get; set; }
+        // Allows raw request and response to be made available.
+        public bool DisableDirectStreaming { get; set; }
     }
 }

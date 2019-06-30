@@ -40,10 +40,20 @@ namespace Rickard.Butler
             else
             {
                 settings = new ConnectionSettings(new Uri(config.Uris.First()))
-                    .DefaultIndex(config.DefaultIndex);
+                    .DefaultIndex(config.DefaultIndex)
+                    .DisableDirectStreaming();
             }
 
+            SetDirectStreaming(settings, config);
             Client = new ElasticClient(settings);
+        }
+
+        protected void SetDirectStreaming(ConnectionSettings settings, ButlerElasticOptions options)
+        {
+            if (options.DisableDirectStreaming)
+            {
+                settings.DisableDirectStreaming();
+            }
         }
 
         protected void Initialize(ButlerElasticOptions config)

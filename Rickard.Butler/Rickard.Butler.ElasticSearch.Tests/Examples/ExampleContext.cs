@@ -64,6 +64,13 @@ namespace Rickard.Butler.ElasticSearch.Tests.Examples
                                         .IgnoreAbove(256)
                                         .Normalizer(KeywordLowercaseNormalizer))
                                 ))
+                        .Text(t => t
+                            .Name(n => n.Description)
+                            .Fields(f => f
+                                .Keyword(k => k
+                                    .Name(Lowercase)
+                                    .Normalizer(KeywordLowercaseNormalizer))
+                            ))
                        ))}
             };
         }

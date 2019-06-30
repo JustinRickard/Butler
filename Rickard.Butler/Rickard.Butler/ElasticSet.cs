@@ -195,7 +195,7 @@ namespace Rickard.Butler.ElasticSearch
             var result = _client.Bulk(b => b.Index(Index).IndexMany(documents).Refresh(refresh));
             return result;
         }
-        public async Task<IBulkResponse> AddOrUpdateManyAsync(IEnumerable<TDocumentType> documents, Refresh refresh = Refresh.False)
+        public async Task<IBulkResponse>  AddOrUpdateManyAsync(IEnumerable<TDocumentType> documents, Refresh refresh = Refresh.False)
         {
             var result = _client.Bulk(b => b.Index(Index).IndexMany(documents).Refresh(refresh));
             return result;
@@ -214,6 +214,12 @@ namespace Rickard.Butler.ElasticSearch
             );
         }
 
+        public void PartialUpdate<TPartialDocument>(Guid id, TPartialDocument partialDocument,
+            Refresh refresh = Refresh.False) where TPartialDocument : class
+        {
+            PartialUpdate(id.ToString(), partialDocument, refresh);
+        }
+
         public async Task PartialUpdateAsync<TPartialDocument>(string id, TPartialDocument partialDocument, Refresh refresh = Refresh.False) where TPartialDocument : class
         {
             await _client.UpdateAsync<TDocumentType, TPartialDocument>(id, u => u
@@ -223,11 +229,17 @@ namespace Rickard.Butler.ElasticSearch
             );
         }
 
+        public async Task PartialUpdateAsync<TPartialDocument>(Guid id, TPartialDocument partialDocument,
+            Refresh refresh = Refresh.False) where TPartialDocument : class
+        {
+            await PartialUpdateAsync(id.ToString(), partialDocument, refresh);
+        }
+
         #endregion
 
-        #region Delete
+            #region Delete
 
-        public void DeleteById(string id, Refresh refresh = Refresh.False)
+            public void DeleteById(string id, Refresh refresh = Refresh.False)
         {
             _client.Delete<TDocumentType>(id, d => d
                 .Index(Index)

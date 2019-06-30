@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Elasticsearch.Net;
 using FluentAssertions;
 using Nest;
 using Rickard.Butler.ElasticSearch.Tests.Examples;
@@ -10,13 +11,14 @@ using Xunit;
 
 namespace Rickard.Butler.ElasticSearch.Tests
 {
+    [Collection("Sequential")]
     public class SearchTests : TestBase
     {
         public SearchTests()
         {
-            Context.Examples.AddOrUpdate(ExampleDocA);
-            Context.Examples.AddOrUpdate(ExampleDocB);
-            Context.Examples.AddOrUpdateMany(GenerateExampleDocs(20));
+            Context.Examples.AddOrUpdate(ExampleDocA, Refresh.True);
+            Context.Examples.AddOrUpdate(ExampleDocB, Refresh.True);
+            Context.Examples.AddOrUpdateMany(GenerateExampleDocs(8), Refresh.True);
         }
 
         #region Query Expression
@@ -44,34 +46,47 @@ namespace Rickard.Butler.ElasticSearch.Tests
         [Fact]
         public void ShouldFind_StartsWith()
         {
-            var searchResultsAsc = Context.Examples.Search_StartsWith("Exam", DefaultSkip, DefaultTake, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name);
+            var searchResultsAsc = Context.Examples.Search_StartsWith("exam", DefaultSkip, DefaultTake, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name.Suffix(ExampleContext.Lowercase));
             searchResultsAsc.Result.Count().Should().Be(2);
 
-            var searchResultsDesc = Context.Examples.Search_StartsWith("Exam", DefaultSkip, DefaultTake, x => x.Descending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name);
+            var searchResultsDesc = Context.Examples.Search_StartsWith("exam", DefaultSkip, DefaultTake, x => x.Descending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name.Suffix(ExampleContext.Lowercase));
             searchResultsDesc.Result.Count().Should().Be(2);
 
-            var searchManyResults = Context.Examples.Search_StartsWith("desc", DefaultSkip, DefaultTake, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name, x => x.Description);
-            searchManyResults.Result.Count().Should().Be(2);
+            var searchManyResults = Context.Examples.Search_StartsWith("generat", 0, 1000, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name.Suffix(ExampleContext.Lowercase), x => x.Description.Suffix(ExampleContext.Lowercase));
+            searchManyResults.Result.Count().Should().Be(8);
+        }
+
+        [Fact]
+        public async Task ShouldFind_StartsWithAsync()
+        {
+            var searchResultsAsc = await Context.Examples.Search_StartsWithAsync("exam", DefaultSkip, DefaultTake, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name.Suffix(ExampleContext.Lowercase));
+            searchResultsAsc.Result.Count().Should().Be(2);
+
+            var searchResultsDesc = await Context.Examples.Search_StartsWithAsync("exam", DefaultSkip, DefaultTake, x => x.Descending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name.Suffix(ExampleContext.Lowercase));
+            searchResultsDesc.Result.Count().Should().Be(2);
+
+            var searchManyResults = await Context.Examples.Search_StartsWithAsync("generat", 0, 1000, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name.Suffix(ExampleContext.Lowercase), x => x.Description.Suffix(ExampleContext.Lowercase));
+            searchManyResults.Result.Count().Should().Be(8);
         }
 
         [Fact]
         public void ShouldOrderBy_StartsWith()
         {
-            var searchNameAscResult = Context.Examples.Search_StartsWith("Exam", DefaultSkip, DefaultTake, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name);
+            var searchNameAscResult = Context.Examples.Search_StartsWith("exam", DefaultSkip, DefaultTake, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name.Suffix(ExampleContext.Lowercase));
             searchNameAscResult.Result.ElementAt(0).Name.Should().Be(ExampleDocA.Name);
             searchNameAscResult.Result.ElementAt(1).Name.Should().Be(ExampleDocB.Name);
 
-            var searchNameDescResults = Context.Examples.Search_StartsWith("Exam", DefaultSkip, DefaultTake, x => x.Descending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name);
+            var searchNameDescResults = Context.Examples.Search_StartsWith("exam", DefaultSkip, DefaultTake, x => x.Descending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name.Suffix(ExampleContext.Lowercase));
             searchNameDescResults.Result.ElementAt(0).Name.Should().Be(ExampleDocB.Name);
             searchNameDescResults.Result.ElementAt(1).Name.Should().Be(ExampleDocA.Name);
 
-            var searchManyAscResults = Context.Examples.Search_StartsWith("desc", DefaultSkip, DefaultTake, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name, x => x.Description);
-            searchManyAscResults.Result.ElementAt(0).Name.Should().Be(ExampleDocA.Name);
-            searchManyAscResults.Result.ElementAt(1).Name.Should().Be(ExampleDocB.Name);
+            var searchManyAscResults = Context.Examples.Search_StartsWith("gener", DefaultSkip, 1000, x => x.Ascending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name.Suffix(ExampleContext.Lowercase), x => x.Description.Suffix(ExampleContext.Lowercase));
+            searchManyAscResults.Result.First().Name.Should().Be("Generated Example 1");
+            searchManyAscResults.Result.Last().Name.Should().Be("Generated Example 8");
 
-            var searchManyDescResults = Context.Examples.Search_StartsWith("desc", DefaultSkip, DefaultTake, x => x.Descending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name, x => x.Description);
-            searchManyDescResults.Result.ElementAt(0).Name.Should().Be(ExampleDocB.Name);
-            searchManyDescResults.Result.ElementAt(1).Name.Should().Be(ExampleDocA.Name);
+            var searchManyDescResults = Context.Examples.Search_StartsWith("gener", DefaultSkip, 1000, x => x.Descending(f => f.Name.Suffix(ExampleContext.Lowercase)), x => x.Name.Suffix(ExampleContext.Lowercase), x => x.Description.Suffix(ExampleContext.Lowercase));
+            searchManyDescResults.Result.First().Name.Should().Be("Generated Example 8");
+            searchManyDescResults.Result.Last().Name.Should().Be("Generated Example 1");
         }
     }
 }

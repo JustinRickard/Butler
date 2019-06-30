@@ -56,8 +56,8 @@ namespace Rickard.Butler.ElasticSearch.Tests
                 yield return new ExampleDocument
                 {
                     Id = Guid.NewGuid(),
-                    Description = $"Generated Description {count}",
-                    Name = $"Generated Example {count}"
+                    Description = $"Generated Description {i+1}",
+                    Name = $"Generated Example {i+1}"
                 };
             }
         }

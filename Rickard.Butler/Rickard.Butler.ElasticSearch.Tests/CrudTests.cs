@@ -10,6 +10,7 @@ using Xunit;
 
 namespace Rickard.Butler.ElasticSearch.Tests
 {
+    [Collection("Sequential")]
     public class CrudTests : TestBase
     {
         #region Insert and Get
@@ -76,6 +77,35 @@ namespace Rickard.Butler.ElasticSearch.Tests
             var updated = Context.Examples.GetById(ExampleDocA.Id);
             updated.Name.Should().Be(newName);
         }
+
+        [Fact]
+        public void ShouldPartiallyUpdate()
+        {
+            Context.Examples.AddOrUpdate(ExampleDocA, Refresh.WaitFor);
+
+            var newName = "Example A partially updated";
+            var partialDoc = new PartialExampleDocument { Name = newName };
+
+            Context.Examples.PartialUpdate(ExampleDocA.Id, partialDoc, Refresh.True);
+
+            var updated = Context.Examples.GetById(ExampleDocA.Id);
+            updated.Name.Should().Be(newName);
+        }
+
+        [Fact]
+        public async Task ShouldPartiallyUpdateAsync()
+        {
+            await Context.Examples.AddOrUpdateAsync(ExampleDocA, Refresh.WaitFor);
+
+            var newName = "Example A partially updated";
+            var partialDoc = new PartialExampleDocument { Name = newName };
+
+            await Context.Examples.PartialUpdateAsync(ExampleDocA.Id, partialDoc, Refresh.True);
+
+            var updated = await Context.Examples.GetByIdAsync(ExampleDocA.Id);
+            updated.Name.Should().Be(newName);
+        }
+
         #endregion
 
         #region Delete
@@ -106,5 +136,10 @@ namespace Rickard.Butler.ElasticSearch.Tests
 
         #endregion
 
+    }
+
+    public class PartialExampleDocument
+    {
+        public string Name { get; set; }
     }
 }
