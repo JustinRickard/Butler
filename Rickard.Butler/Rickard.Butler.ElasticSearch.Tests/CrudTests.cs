@@ -85,11 +85,15 @@ namespace Rickard.Butler.ElasticSearch.Tests
 
             var newName = "Example A partially updated";
             var partialDoc = new PartialExampleDocument { Name = newName };
-
             Context.Examples.PartialUpdate(ExampleDocA.Id, partialDoc, Refresh.True);
-
             var updated = Context.Examples.GetById(ExampleDocA.Id);
             updated.Name.Should().Be(newName);
+
+            var newName2 = "Example A partially updated 2";
+            var partialDoc2 = new { Name = newName2 };
+            Context.Examples.PartialUpdate(ExampleDocA.Id, partialDoc2, Refresh.True);
+            var updated2 = Context.Examples.GetById(ExampleDocA.Id);
+            updated2.Name.Should().Be(newName2);
         }
 
         [Fact]
@@ -99,11 +103,15 @@ namespace Rickard.Butler.ElasticSearch.Tests
 
             var newName = "Example A partially updated";
             var partialDoc = new PartialExampleDocument { Name = newName };
-
             await Context.Examples.PartialUpdateAsync(ExampleDocA.Id, partialDoc, Refresh.True);
-
             var updated = await Context.Examples.GetByIdAsync(ExampleDocA.Id);
             updated.Name.Should().Be(newName);
+
+            var newName2 = "Example A partially updated 2";
+            var partialDoc2 = new  { Name = newName2 };
+            await Context.Examples.PartialUpdateAsync(ExampleDocA.Id, partialDoc2, Refresh.True);
+            var updated2 = await Context.Examples.GetByIdAsync(ExampleDocA.Id);
+            updated2.Name.Should().Be(newName2);
         }
 
         #endregion
