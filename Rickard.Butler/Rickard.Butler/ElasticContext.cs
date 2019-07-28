@@ -58,14 +58,14 @@ namespace Rickard.Butler
 
         protected void Initialize(ButlerElasticOptions config)
         {
-            var sets = this.GetType().GetProperties(); //.Where(p => p.PropertyType == typeof(ElasticSet<>));
+            var sets = this.GetType().GetProperties().Where(p => p.PropertyType.Name.StartsWith("ElasticSet"));
 
             foreach (var set in sets)
             {
-                var myType = typeof(ElasticSet<>);
                 var type = set.PropertyType;
+                var elasticSetType = typeof(ElasticSet<>);
                 Type[] typeParameters = type.GetGenericArguments();
-                var constructedType = myType.MakeGenericType(typeParameters);
+                var constructedType = elasticSetType.MakeGenericType(typeParameters);
 
                 // Get index of ElasticIndex attribute or fall back to the property name on the ElasticContext
                 string rawIndex = GetRawIndex(set);

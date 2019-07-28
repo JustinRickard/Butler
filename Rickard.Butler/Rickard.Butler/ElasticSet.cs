@@ -364,7 +364,7 @@ namespace Rickard.Butler.ElasticSearch
 
         #region Search
 
-        public SearchResult<TDocumentType> Search_StartsWith(string search, int skip, int take, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, params Expression<Func<TDocumentType, object>>[] fields)
+        public SearchResult<TDocumentType> Search_StartsWith(string search, int skip, int take, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, Func<SourceFilterDescriptor<TDocumentType>, ISourceFilter> source, params Expression<Func<TDocumentType, object>>[] fields)
         {
             var exps = new List<Func<QueryContainerDescriptor<TDocumentType>, QueryContainer>>();
             foreach (var field in fields)
@@ -376,13 +376,14 @@ namespace Rickard.Butler.ElasticSearch
                 .Size(take)
                 .Skip(skip)
                 .Sort(sortFieldExpr)
+                .Source(source)
                 .Index(Index)
                 .Query(q => q.Bool(b => b.Should(exps))));
 
             return result.ToSearchResult();
         }
 
-        public async Task<SearchResult<TDocumentType>> Search_StartsWithAsync(string search, int skip, int take, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, params Expression<Func<TDocumentType, object>>[] fields)
+        public async Task<SearchResult<TDocumentType>> Search_StartsWithAsync(string search, int skip, int take, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, Func<SourceFilterDescriptor<TDocumentType>, ISourceFilter> source, params Expression<Func<TDocumentType, object>>[] fields)
         {
             var exps = new List<Func<QueryContainerDescriptor<TDocumentType>, QueryContainer>>();
             foreach (var field in fields)
@@ -394,35 +395,38 @@ namespace Rickard.Butler.ElasticSearch
                 .Size(take)
                 .Skip(skip)
                 .Sort(sortFieldExpr)
+                .Source(source)
                 .Index(Index)
                 .Query(q => q.Bool(b => b.Should(exps))));
 
             return result.ToSearchResult();
         }
 
-        public SearchResult<TDocumentType> Search(int skip, int take, Func<QueryContainerDescriptor<TDocumentType>, QueryContainer> searchExpression)
+        public SearchResult<TDocumentType> Search(int skip, int take, Func<SourceFilterDescriptor<TDocumentType>, ISourceFilter> source, Func<QueryContainerDescriptor<TDocumentType>, QueryContainer> searchExpression)
         {
             var result = _client.Search<TDocumentType>(s => s
                 .Size(take)
                 .Skip(skip)
+                .Source(source)
                 .Index(Index)
                 .Query(searchExpression));
 
             return result.ToSearchResult();
         }
 
-        public async Task<SearchResult<TDocumentType>> SearchAsync(int skip, int take, Func<QueryContainerDescriptor<TDocumentType>, QueryContainer> query)
+        public async Task<SearchResult<TDocumentType>> SearchAsync(int skip, int take, Func<SourceFilterDescriptor<TDocumentType>, ISourceFilter> source, Func<QueryContainerDescriptor<TDocumentType>, QueryContainer> query)
         {
             var result = await _client.SearchAsync<TDocumentType>(s => s
                 .Size(take)
                 .Skip(skip)
+                .Source(source)
                 .Index(Index)
                 .Query(query));
 
             return result.ToSearchResult();
         }
 
-        public SearchResult<TDocumentType> Search(string search, int skip, int take, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, params Expression<Func<TDocumentType, object>>[] fields)
+        public SearchResult<TDocumentType> Search(string search, int skip, int take, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, Func<SourceFilterDescriptor<TDocumentType>, ISourceFilter> source, params Expression<Func<TDocumentType, object>>[] fields)
         {
             var exps = new List<Func<QueryContainerDescriptor<TDocumentType>, QueryContainer>>();
             foreach (var field in fields)
@@ -433,13 +437,15 @@ namespace Rickard.Butler.ElasticSearch
             var result = _client.Search<TDocumentType>(s => s
                 .Size(take)
                 .Skip(skip)
+                .Sort(sortFieldExpr)
+                .Source(source)
                 .Index(Index)
                 .Query(q => q.Bool(b => b.Should(exps))));
 
             return result.ToSearchResult();
         }
 
-        public async Task<SearchResult<TDocumentType>> SearchAsync(string search, int skip, int take, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, params Expression<Func<TDocumentType, object>>[] fields)
+        public async Task<SearchResult<TDocumentType>> SearchAsync(string search, int skip, int take, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, Func<SourceFilterDescriptor<TDocumentType>, ISourceFilter> source, params Expression<Func<TDocumentType, object>>[] fields)
         {
             var exps = new List<Func<QueryContainerDescriptor<TDocumentType>, QueryContainer>>();
             foreach (var field in fields)
@@ -450,17 +456,21 @@ namespace Rickard.Butler.ElasticSearch
             var result = await _client.SearchAsync<TDocumentType>(s => s
                 .Size(take)
                 .Skip(skip)
+                .Sort(sortFieldExpr)
+                .Source(source)
                 .Index(Index)
                 .Query(q => q.Bool(b => b.Should(exps))));
 
             return result.ToSearchResult();
         }
 
-        public SearchResult<TDocumentType> SearchWildcard(string search, int skip, int take, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, Expression<Func<TDocumentType, object>> field)
+        public SearchResult<TDocumentType> SearchWildcard(string search, int skip, int take, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, Func<SourceFilterDescriptor<TDocumentType>, ISourceFilter> source, Expression<Func<TDocumentType, object>> field)
         {
             var result = _client.Search<TDocumentType>(s => s
                 .Size(take)
                 .Skip(skip)
+                .Sort(sortFieldExpr)
+                .Source(source)
                 .Index(Index)
                 .Query(q => q.Wildcard(c => c
                     .Field(field)
@@ -470,11 +480,13 @@ namespace Rickard.Butler.ElasticSearch
             return result.ToSearchResult();
         }
 
-        public async Task<SearchResult<TDocumentType>> SearchWildcardAsync(string search, int skip, int take, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, Expression<Func<TDocumentType, object>> field)
+        public async Task<SearchResult<TDocumentType>> SearchWildcardAsync(string search, int skip, int take, Func<SortDescriptor<TDocumentType>, IPromise<IList<ISort>>> sortFieldExpr, Func<SourceFilterDescriptor<TDocumentType>, ISourceFilter> source, Expression<Func<TDocumentType, object>> field)
         {
             var result = await _client.SearchAsync<TDocumentType>(s => s
                 .Size(take)
                 .Skip(skip)
+                .Sort(sortFieldExpr)
+                .Source(source)
                 .Index(Index)
                 .Query(q => q.Wildcard(c => c
                     .Field(field)
