@@ -6,7 +6,7 @@ using Nest;
 
 namespace Rickard.Butler.ElasticSearch.Tests.Examples
 {
-    public class ExampleContext : ElasticContext
+    public sealed class ExampleContext : ElasticContext
     {
         public const string Keyword = "keyword";
         public const string Lowercase = "lowercase";

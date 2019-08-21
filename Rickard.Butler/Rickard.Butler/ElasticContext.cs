@@ -22,7 +22,7 @@ namespace Rickard.Butler
             ConfigureClient(options.Value);
         }
 
-        private void ConfigureClient(ButlerElasticOptions config)
+        protected virtual void ConfigureClient(ButlerElasticOptions config)
         {
             if (config.Uris == null || !config.Uris.Any())
             {
@@ -48,7 +48,7 @@ namespace Rickard.Butler
             Client = new ElasticClient(settings);
         }
 
-        protected void SetDirectStreaming(ConnectionSettings settings, ButlerElasticOptions options)
+        private void SetDirectStreaming(ConnectionSettings settings, ButlerElasticOptions options)
         {
             if (options.DisableDirectStreaming)
             {
@@ -56,13 +56,14 @@ namespace Rickard.Butler
             }
         }
 
-        protected void Initialize(ButlerElasticOptions config)
+        protected virtual void Initialize(ButlerElasticOptions config)
         {
-            var sets = this.GetType().GetProperties().Where(p => p.PropertyType.Name.StartsWith("ElasticSet"));
+            var sets = this.GetType().GetProperties().Where(p => p.PropertyType.IsGenericType && p.PropertyType.Name.StartsWith("ElasticSet"));
 
             foreach (var set in sets)
             {
                 var type = set.PropertyType;
+
                 var elasticSetType = typeof(ElasticSet<>);
                 Type[] typeParameters = type.GetGenericArguments();
                 var constructedType = elasticSetType.MakeGenericType(typeParameters);
